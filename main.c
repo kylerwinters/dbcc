@@ -14,7 +14,7 @@
 #include "2bsm.h"
 #include "2json.h"
 #include "options.h"
-
+#define DBCC_VERSION 1
 typedef enum {
 	CONVERT_TO_C,
 	CONVERT_TO_XML,

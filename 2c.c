@@ -233,7 +233,9 @@ static int signal2serializer(signal_t *sig, const char *msg_name, FILE *o, const
 	}
 	if (start)
 		fprintf(o, "%sx <<= %u; \n", indent, start);
-	fprintf(o, "%s%c |= x;\n", indent, motorola ? 'm' : 'i');
+
+	//fprintf(o, "%s%c |= x;\n", indent, motorola ? 'm' : 'i');
+    fprintf(o, "%s%c &= (~((uint64_t)0x%"PRIx64" << %u)) | x;\n", indent, motorola ? 'm' : 'i', mask, start);
 	return 0;
 }
 
@@ -590,7 +592,7 @@ static int msg_pack(can_msg_t *msg, FILE *c, const char *name, bool motorola_use
 	if (motorola_used)
 		fprintf(c, "\tregister uint64_t m = 0;\n");
 	if (intel_used)
-		fprintf(c, "\tregister uint64_t i = 0;\n");
+		fprintf(c, "\tregister uint64_t i = 0xFFFFFFFFFFFFFFFF;\n");
 	if (!message_has_signals)
 		fprintf(c, "\tUNUSED(o);\n\tUNUSED(data);\n");
 	signal_t *multiplexor = process_signals_and_find_multiplexer(msg, c, name, true);
@@ -869,6 +871,34 @@ static int msg2h_types(dbc_t *dbc, FILE *h, dbc2c_options_t *copts)
 		fprintf(h, "typedef enum {\n");
 		for (size_t j = 0; j < list->val_list_item_count; j++) {
 			val_list_item_t *item = list->val_list_items[j];
+            for(int k=0; k<strlen(item->name); k++)
+            {
+
+                switch(item->name[k])
+                {
+                    case '"':
+                    case '(':
+                    case ')':
+                    case ' ':
+                    case '/':
+                    case '!':
+                    case ',':
+                    case '.':
+                    case '-':
+                    case '?':
+                    case '=':
+                        item->name[k] = '_';
+                        break;
+                    case '>':
+                        item->name[k] = 'G';
+                        break;
+                    case '<':
+                        item->name[k] = 'L';
+                        break;
+                    default:
+                        break;
+                }
+            }
 			fprintf(h, "\t%s_%s_e = %d,\n", list->name, item->name, item->value);
 		}
 		fprintf(h, "} %s_e;\n\n", list->name);

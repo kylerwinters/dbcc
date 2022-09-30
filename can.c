@@ -220,7 +220,7 @@ static val_list_t *ast2val(mpc_ast_t *top, mpc_ast_t *ast)
 		} while (bFlip);
 	}
 
-	return val;
+	return val;/* Returns Enums values */
 }
 
 static can_msg_t *ast2msg(mpc_ast_t *top, mpc_ast_t *ast, dbc_t *dbc)
